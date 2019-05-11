@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "SwarmGuidFixer",
+	"Description": "fixes asset guids for swarm lightning build",
+	"Category": "Other",
+	"CreatedBy": "lagglyluk",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "SwarmGuidFixer",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
