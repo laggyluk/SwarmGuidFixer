@@ -1,15 +1,15 @@
 // Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
-#include "SwarmGuidFixerStyle.h"
-#include "SwarmGuidFixer.h"
+#include "GuidFixerStyle.h"
+#include "GuidFixer.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Slate/SlateGameResources.h"
 #include "Interfaces/IPluginManager.h"
 
-TSharedPtr< FSlateStyleSet > FSwarmGuidFixerStyle::StyleInstance = NULL;
+TSharedPtr< FSlateStyleSet > FGuidFixerStyle::StyleInstance = NULL;
 
-void FSwarmGuidFixerStyle::Initialize()
+void FGuidFixerStyle::Initialize()
 {
 	if (!StyleInstance.IsValid())
 	{
@@ -18,16 +18,16 @@ void FSwarmGuidFixerStyle::Initialize()
 	}
 }
 
-void FSwarmGuidFixerStyle::Shutdown()
+void FGuidFixerStyle::Shutdown()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 	ensure(StyleInstance.IsUnique());
 	StyleInstance.Reset();
 }
 
-FName FSwarmGuidFixerStyle::GetStyleSetName()
+FName FGuidFixerStyle::GetStyleSetName()
 {
-	static FName StyleSetName(TEXT("SwarmGuidFixerStyle"));
+	static FName StyleSetName(TEXT("GuidFixerStyle"));
 	return StyleSetName;
 }
 
@@ -41,12 +41,12 @@ const FVector2D Icon16x16(16.0f, 16.0f);
 const FVector2D Icon20x20(20.0f, 20.0f);
 const FVector2D Icon40x40(40.0f, 40.0f);
 
-TSharedRef< FSlateStyleSet > FSwarmGuidFixerStyle::Create()
+TSharedRef< FSlateStyleSet > FGuidFixerStyle::Create()
 {
-	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("SwarmGuidFixerStyle"));
-	Style->SetContentRoot(IPluginManager::Get().FindPlugin("SwarmGuidFixer")->GetBaseDir() / TEXT("Resources"));
+	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("GuidFixerStyle"));
+	Style->SetContentRoot(IPluginManager::Get().FindPlugin("GuidFixer")->GetBaseDir() / TEXT("Resources"));
 
-	Style->Set("SwarmGuidFixer.PluginAction", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
+	Style->Set("GuidFixer.PluginAction", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 
 	return Style;
 }
@@ -57,7 +57,7 @@ TSharedRef< FSlateStyleSet > FSwarmGuidFixerStyle::Create()
 #undef TTF_FONT
 #undef OTF_FONT
 
-void FSwarmGuidFixerStyle::ReloadTextures()
+void FGuidFixerStyle::ReloadTextures()
 {
 	if (FSlateApplication::IsInitialized())
 	{
@@ -65,7 +65,7 @@ void FSwarmGuidFixerStyle::ReloadTextures()
 	}
 }
 
-const ISlateStyle& FSwarmGuidFixerStyle::Get()
+const ISlateStyle& FGuidFixerStyle::Get()
 {
 	return *StyleInstance;
 }

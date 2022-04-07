@@ -1,67 +1,67 @@
 // Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
-#include "SwarmGuidFixer.h"
-#include "SwarmGuidFixerStyle.h"
-#include "SwarmGuidFixerCommands.h"
+#include "GuidFixer.h"
+#include "GuidFixerStyle.h"
+#include "GuidFixerCommands.h"
 #include "Misc/MessageDialog.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 
 #include "LevelEditor.h"
 
-static const FName SwarmGuidFixerTabName("SwarmGuidFixer");
+static const FName GuidFixerTabName("GuidFixer");
 
-#define LOCTEXT_NAMESPACE "FSwarmGuidFixerModule"
+#define LOCTEXT_NAMESPACE "FGuidFixerModule"
 
-void FSwarmGuidFixerModule::StartupModule()
+void FGuidFixerModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	
-	FSwarmGuidFixerStyle::Initialize();
-	FSwarmGuidFixerStyle::ReloadTextures();
+	FGuidFixerStyle::Initialize();
+	FGuidFixerStyle::ReloadTextures();
 
-	FSwarmGuidFixerCommands::Register();
+	FGuidFixerCommands::Register();
 	
 	PluginCommands = MakeShareable(new FUICommandList);
 
 	PluginCommands->MapAction(
-		FSwarmGuidFixerCommands::Get().PluginAction,
-		FExecuteAction::CreateRaw(this, &FSwarmGuidFixerModule::PluginButtonClicked),
+		FGuidFixerCommands::Get().PluginAction,
+		FExecuteAction::CreateRaw(this, &FGuidFixerModule::PluginButtonClicked),
 		FCanExecuteAction());
 		
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 	
 	{
 		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-		MenuExtender->AddMenuExtension("WindowLayout", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FSwarmGuidFixerModule::AddMenuExtension));
+		MenuExtender->AddMenuExtension("WindowLayout", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FGuidFixerModule::AddMenuExtension));
 
 		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 	}
 	
 	{
 		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FSwarmGuidFixerModule::AddToolbarExtension));
+		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FGuidFixerModule::AddToolbarExtension));
 		
 		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
 	}
 }
 
-void FSwarmGuidFixerModule::ShutdownModule()
+void FGuidFixerModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
-	FSwarmGuidFixerStyle::Shutdown();
+	FGuidFixerStyle::Shutdown();
 
-	FSwarmGuidFixerCommands::Unregister();
+	FGuidFixerCommands::Unregister();
 }
 
-void FSwarmGuidFixerModule::PluginButtonClicked()
+void FGuidFixerModule::PluginButtonClicked()
 {
 	/*
 	// Put your "OnButtonClicked" stuff here
 	FText DialogText = FText::Format(
 							LOCTEXT("PluginButtonDialogText", "Add code to {0} in {1} to override this button's actions"),
-							FText::FromString(TEXT("FSwarmGuidFixerModule::PluginButtonClicked()")),
-							FText::FromString(TEXT("SwarmGuidFixer.cpp"))
+							FText::FromString(TEXT("FGuidFixerModule::PluginButtonClicked()")),
+							FText::FromString(TEXT("GuidFixer.cpp"))
 					   );
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 	*/
@@ -85,16 +85,16 @@ void FSwarmGuidFixerModule::PluginButtonClicked()
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
 
-void FSwarmGuidFixerModule::AddMenuExtension(FMenuBuilder& Builder)
+void FGuidFixerModule::AddMenuExtension(FMenuBuilder& Builder)
 {
-	Builder.AddMenuEntry(FSwarmGuidFixerCommands::Get().PluginAction);
+	Builder.AddMenuEntry(FGuidFixerCommands::Get().PluginAction);
 }
 
-void FSwarmGuidFixerModule::AddToolbarExtension(FToolBarBuilder& Builder)
+void FGuidFixerModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {
-	Builder.AddToolBarButton(FSwarmGuidFixerCommands::Get().PluginAction);
+	Builder.AddToolBarButton(FGuidFixerCommands::Get().PluginAction);
 }
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FSwarmGuidFixerModule, SwarmGuidFixer)
+IMPLEMENT_MODULE(FGuidFixerModule, GuidFixer)

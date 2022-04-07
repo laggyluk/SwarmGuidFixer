@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class SwarmGuidFixer : ModuleRules
+public class GuidFixer : ModuleRules
 {
-	public SwarmGuidFixer(ReadOnlyTargetRules Target) : base(Target)
+	public GuidFixer(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		

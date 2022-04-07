@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Styling/SlateStyle.h"
 
-class FSwarmGuidFixerStyle
+class FGuidFixerStyle
 {
 public:
 

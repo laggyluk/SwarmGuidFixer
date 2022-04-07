@@ -8,7 +8,7 @@
 class FToolBarBuilder;
 class FMenuBuilder;
 
-class FSwarmGuidFixerModule : public IModuleInterface
+class FGuidFixerModule : public IModuleInterface
 {
 public:
 
