@@ -1,4 +1,4 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GuidFixerCommands.h"
 
@@ -6,7 +6,8 @@
 
 void FGuidFixerCommands::RegisterCommands()
 {
-	UI_COMMAND(PluginAction, "GuidFixer", "Execute GuidFixer action", EUserInterfaceActionType::Button, FInputGesture());
+	UI_COMMAND(FixMaterialGuids, "Fix Material GUIDs", "Fixes material GUIDs so that there are no materials with duplicate IDs.", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(FixTextureGuids, "Fix Texture GUIDs", "Fixes texture GUIDs so that there are no textures with duplicate IDs.", EUserInterfaceActionType::Button, FInputChord());
 }
 
 #undef LOCTEXT_NAMESPACE

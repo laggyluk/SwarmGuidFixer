@@ -1,4 +1,4 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -36,8 +36,9 @@ public class GuidFixer : ModuleRules
 			{
 				"Projects",
 				"InputCore",
+				"EditorFramework",
 				"UnrealEd",
-				"LevelEditor",
+				"ToolMenus",
 				"CoreUObject",
 				"Engine",
 				"Slate",

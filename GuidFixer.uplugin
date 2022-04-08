@@ -3,15 +3,16 @@
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "GuidFixer",
-	"Description": "fixes asset guids for swarm lightning build and streaming textures",
+	"Description": "Fixes asset guids for swarm lightning build and streaming textures.",
 	"Category": "Other",
-	"CreatedBy": "lagglyluk",
+	"CreatedBy": "sophie",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
 	"CanContainContent": false,
 	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{

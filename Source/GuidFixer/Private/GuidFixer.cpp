@@ -1,12 +1,10 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GuidFixer.h"
 #include "GuidFixerStyle.h"
 #include "GuidFixerCommands.h"
 #include "Misc/MessageDialog.h"
-#include "Framework/MultiBox/MultiBoxBuilder.h"
-
-#include "LevelEditor.h"
+#include "ToolMenus.h"
 
 static const FName GuidFixerTabName("GuidFixer");
 
@@ -21,80 +19,117 @@ void FGuidFixerModule::StartupModule()
 
 	FGuidFixerCommands::Register();
 	
-	PluginCommands = MakeShareable(new FUICommandList);
+	FixMaterialGuidsCommands = MakeShareable(new FUICommandList);
 
-	PluginCommands->MapAction(
-		FGuidFixerCommands::Get().PluginAction,
-		FExecuteAction::CreateRaw(this, &FGuidFixerModule::PluginButtonClicked),
+	FixMaterialGuidsCommands->MapAction(
+		FGuidFixerCommands::Get().FixMaterialGuids,
+		FExecuteAction::CreateRaw(this, &FGuidFixerModule::FixMaterialGuids),
 		FCanExecuteAction());
-		
-	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 	
-	{
-		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-		MenuExtender->AddMenuExtension("WindowLayout", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FGuidFixerModule::AddMenuExtension));
+	FixTextureGuidsCommands = MakeShareable(new FUICommandList);
 
-		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
-	}
+	FixTextureGuidsCommands->MapAction(
+		FGuidFixerCommands::Get().FixTextureGuids,
+		FExecuteAction::CreateRaw(this, &FGuidFixerModule::FixTextureGuids),
+		FCanExecuteAction());
 	
-	{
-		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FGuidFixerModule::AddToolbarExtension));
-		
-		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
-	}
+
+	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGuidFixerModule::RegisterMenus));
 }
 
 void FGuidFixerModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
+
+	UToolMenus::UnRegisterStartupCallback(this);
+
+	UToolMenus::UnregisterOwner(this);
+
 	FGuidFixerStyle::Shutdown();
 
 	FGuidFixerCommands::Unregister();
 }
 
-void FGuidFixerModule::PluginButtonClicked()
+void FGuidFixerModule::RegisterMenus()
 {
-	/*
-	// Put your "OnButtonClicked" stuff here
-	FText DialogText = FText::Format(
-							LOCTEXT("PluginButtonDialogText", "Add code to {0} in {1} to override this button's actions"),
-							FText::FromString(TEXT("FGuidFixerModule::PluginButtonClicked()")),
-							FText::FromString(TEXT("GuidFixer.cpp"))
-					   );
-	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
-	*/
-	TMap<FGuid, UMaterialInterface*> guids;
+	// Owner will be used for cleanup in call to UToolMenus::UnregisterOwner
+	FToolMenuOwnerScoped OwnerScoped(this);
 
-	for (TObjectIterator<UMaterialInterface> it; it; ++it)
+	UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.Tools");
 	{
-		UMaterialInterface** result = guids.Find(it->GetLightingGuid());
+		FToolMenuSection& Section = Menu->AddSection("GuidFixer", LOCTEXT("GUID Fixer", "GUID Fixer"));
+		Section.AddMenuEntryWithCommandList(FGuidFixerCommands::Get().FixMaterialGuids, FixMaterialGuidsCommands);
+		Section.AddMenuEntryWithCommandList(FGuidFixerCommands::Get().FixTextureGuids, FixTextureGuidsCommands);
+	}
+}
 
-		if (result == nullptr)
+// This function is a modified version of laggyluk's SwarmGuidFixer
+// https://github.com/laggyluk/SwarmGuidFixer
+void FGuidFixerModule::FixMaterialGuids()
+{
+	TMap<FGuid, UMaterialInterface*> Guids;
+
+	bool bMadeChanges = false;
+	for (TObjectIterator<UMaterialInterface> Material; Material; ++Material)
+	{
+		if (!Material->GetLightingGuid().IsValid())
 		{
-			guids.Add(it->GetLightingGuid(), *it);
+			continue;
+		}
+		
+		UMaterialInterface** Result = Guids.Find(Material->GetLightingGuid());
+
+		if (Result == nullptr)
+		{
+			Guids.Add(Material->GetLightingGuid(), *Material);
 		}
 		else
 		{
-			it->SetLightingGuid();
-			it->Modify();
+			Material->SetLightingGuid();
+			Material->Modify();
+			bMadeChanges = true;
+			UE_LOG(LogTemp, Display, TEXT("%s: Material has had its GUID updated."), *Material->GetName());
 		}
 	}
-	FText DialogText = FText::FromString("Done, save all to save all");
+	
+	const FText DialogText = FText::FromString(bMadeChanges
+			? "At least one material GUID has been changed. Use save all to save these changes."
+			: "No duplicate material GUIDs found.");
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
 
-void FGuidFixerModule::AddMenuExtension(FMenuBuilder& Builder)
+void FGuidFixerModule::FixTextureGuids()
 {
-	Builder.AddMenuEntry(FGuidFixerCommands::Get().PluginAction);
-}
+	TMap<FGuid, UTexture*> Guids;
 
-void FGuidFixerModule::AddToolbarExtension(FToolBarBuilder& Builder)
-{
-	Builder.AddToolBarButton(FGuidFixerCommands::Get().PluginAction);
+	bool bMadeChanges = false;
+	for (TObjectIterator<UTexture> Texture; Texture; ++Texture)
+	{
+		if (!Texture->GetLightingGuid().IsValid())
+		{
+			continue;
+		}
+	
+		UTexture** Result = Guids.Find(Texture->GetLightingGuid());
+		if (Result == nullptr)
+		{
+			Guids.Add(Texture->GetLightingGuid(), *Texture);
+		}
+		else
+		{
+			Texture->SetLightingGuid();
+			Texture->Modify();
+			bMadeChanges = true;
+			UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetName());
+		}
+	}
+	
+	const FText DialogText = FText::FromString(bMadeChanges
+			? "At least one texture GUID has been changed. Use save all to save these changes."
+			: "No duplicate texture GUIDs found.");
+	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
-
 #undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(FGuidFixerModule, GuidFixer)

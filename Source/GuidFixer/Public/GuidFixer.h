@@ -1,4 +1,4 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -12,18 +12,23 @@ class FGuidFixerModule : public IModuleInterface
 {
 public:
 
+	
+	static FText Menu_FixTextureGuidsGetTitle();
+	static FText Menu_FixMaterialGuidsGetTitle();
+		
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 	
-	/** This function will be bound to Command. */
-	void PluginButtonClicked();
+	void FixMaterialGuids();
+	void FixTextureGuids();
+	
 	
 private:
+	void RegisterMenus();
 
-	void AddToolbarExtension(FToolBarBuilder& Builder);
-	void AddMenuExtension(FMenuBuilder& Builder);
 
 private:
-	TSharedPtr<class FUICommandList> PluginCommands;
+	TSharedPtr<class FUICommandList> FixMaterialGuidsCommands;
+	TSharedPtr<class FUICommandList> FixTextureGuidsCommands;
 };
