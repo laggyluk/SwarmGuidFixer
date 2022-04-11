@@ -13,28 +13,29 @@ static const FName GuidFixerTabName("GuidFixer");
 void FGuidFixerModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	
+
 	FGuidFixerStyle::Initialize();
 	FGuidFixerStyle::ReloadTextures();
 
 	FGuidFixerCommands::Register();
-	
+
 	FixMaterialGuidsCommands = MakeShareable(new FUICommandList);
 
 	FixMaterialGuidsCommands->MapAction(
 		FGuidFixerCommands::Get().FixMaterialGuids,
 		FExecuteAction::CreateRaw(this, &FGuidFixerModule::FixMaterialGuids),
 		FCanExecuteAction());
-	
+
 	FixTextureGuidsCommands = MakeShareable(new FUICommandList);
 
 	FixTextureGuidsCommands->MapAction(
 		FGuidFixerCommands::Get().FixTextureGuids,
 		FExecuteAction::CreateRaw(this, &FGuidFixerModule::FixTextureGuids),
 		FCanExecuteAction());
-	
 
-	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGuidFixerModule::RegisterMenus));
+
+	UToolMenus::RegisterStartupCallback(
+		FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGuidFixerModule::RegisterMenus));
 }
 
 void FGuidFixerModule::ShutdownModule()
@@ -75,9 +76,13 @@ void FGuidFixerModule::FixMaterialGuids()
 	{
 		if (!Material->GetLightingGuid().IsValid())
 		{
+			Material->SetLightingGuid();
+			Material->Modify();
+			bMadeChanges = true;
+			UE_LOG(LogTemp, Display, TEXT("%s: Material has had its GUID updated."), *Material->GetPathName());
 			continue;
 		}
-		
+
 		UMaterialInterface** Result = Guids.Find(Material->GetLightingGuid());
 
 		if (Result == nullptr)
@@ -89,13 +94,13 @@ void FGuidFixerModule::FixMaterialGuids()
 			Material->SetLightingGuid();
 			Material->Modify();
 			bMadeChanges = true;
-			UE_LOG(LogTemp, Display, TEXT("%s: Material has had its GUID updated."), *Material->GetName());
+			UE_LOG(LogTemp, Display, TEXT("%s: Material has had its GUID updated."), *Material->GetPathName());
 		}
 	}
-	
+
 	const FText DialogText = FText::FromString(bMadeChanges
-			? "At least one material GUID has been changed. Use save all to save these changes."
-			: "No duplicate material GUIDs found.");
+		                                           ? "At least one material GUID has been changed. Use save all to save these changes."
+		                                           : "No duplicate material GUIDs found.");
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
 
@@ -108,9 +113,13 @@ void FGuidFixerModule::FixTextureGuids()
 	{
 		if (!Texture->GetLightingGuid().IsValid())
 		{
+			Texture->SetLightingGuid();
+			Texture->Modify();
+			bMadeChanges = true;
+			UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetPathName());
 			continue;
 		}
-	
+
 		UTexture** Result = Guids.Find(Texture->GetLightingGuid());
 		if (Result == nullptr)
 		{
@@ -118,18 +127,26 @@ void FGuidFixerModule::FixTextureGuids()
 		}
 		else
 		{
+			// Update the initial texture with the same GUID if its GUID hasn't been updated already
+			if ((*Result)->GetLightingGuid() == Texture->GetLightingGuid())
+			{
+				(*Result)->SetLightingGuid();
+				(*Result)->Modify();
+				UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetPathName());
+			}
+		
 			Texture->SetLightingGuid();
 			Texture->Modify();
 			bMadeChanges = true;
-			UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetName());
+			UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetPathName());
 		}
 	}
-	
+
 	const FText DialogText = FText::FromString(bMadeChanges
-			? "At least one texture GUID has been changed. Use save all to save these changes."
-			: "No duplicate texture GUIDs found.");
+		                                           ? "At least one texture GUID has been changed. Use save all to save these changes."
+		                                           : "No duplicate texture GUIDs found.");
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FGuidFixerModule, GuidFixer)
