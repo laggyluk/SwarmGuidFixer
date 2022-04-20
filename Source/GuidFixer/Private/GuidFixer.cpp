@@ -33,6 +33,13 @@ void FGuidFixerModule::StartupModule()
 		FExecuteAction::CreateRaw(this, &FGuidFixerModule::FixTextureGuids),
 		FCanExecuteAction());
 
+	FixEmptyTextureGuidsCommands = MakeShareable(new FUICommandList);
+
+	FixEmptyTextureGuidsCommands->MapAction(
+		FGuidFixerCommands::Get().FixEmptyTextureGuids,
+		FExecuteAction::CreateRaw(this, &FGuidFixerModule::FixEmptyTextureGuids),
+		FCanExecuteAction());
+
 
 	UToolMenus::RegisterStartupCallback(
 		FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FGuidFixerModule::RegisterMenus));
@@ -62,12 +69,14 @@ void FGuidFixerModule::RegisterMenus()
 		FToolMenuSection& Section = Menu->AddSection("GuidFixer", LOCTEXT("GUID Fixer", "GUID Fixer"));
 		Section.AddMenuEntryWithCommandList(FGuidFixerCommands::Get().FixMaterialGuids, FixMaterialGuidsCommands);
 		Section.AddMenuEntryWithCommandList(FGuidFixerCommands::Get().FixTextureGuids, FixTextureGuidsCommands);
+		Section.AddMenuEntryWithCommandList(FGuidFixerCommands::Get().FixEmptyTextureGuids,
+		                                    FixEmptyTextureGuidsCommands);
 	}
 }
 
 // This function is a modified version of laggyluk's SwarmGuidFixer
 // https://github.com/laggyluk/SwarmGuidFixer
-void FGuidFixerModule::FixMaterialGuids()
+void FGuidFixerModule::FixMaterialGuids() const
 {
 	TMap<FGuid, UMaterialInterface*> Guids;
 
@@ -91,6 +100,15 @@ void FGuidFixerModule::FixMaterialGuids()
 		}
 		else
 		{
+			// Update the initial material with the same GUID if its GUID hasn't been updated already
+			// This is probably unnecessary, but better safe than sorry
+			if ((*Result)->GetLightingGuid() == Material->GetLightingGuid())
+			{
+				(*Result)->SetLightingGuid();
+				(*Result)->Modify();
+				UE_LOG(LogTemp, Display, TEXT("%s: Material has had its GUID updated."), *Material->GetPathName());
+			}
+			
 			Material->SetLightingGuid();
 			Material->Modify();
 			bMadeChanges = true;
@@ -104,7 +122,7 @@ void FGuidFixerModule::FixMaterialGuids()
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
 
-void FGuidFixerModule::FixTextureGuids()
+void FGuidFixerModule::FixTextureGuids() const
 {
 	TMap<FGuid, UTexture*> Guids;
 
@@ -113,10 +131,6 @@ void FGuidFixerModule::FixTextureGuids()
 	{
 		if (!Texture->GetLightingGuid().IsValid())
 		{
-			Texture->SetLightingGuid();
-			Texture->Modify();
-			bMadeChanges = true;
-			UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetPathName());
 			continue;
 		}
 
@@ -128,13 +142,14 @@ void FGuidFixerModule::FixTextureGuids()
 		else
 		{
 			// Update the initial texture with the same GUID if its GUID hasn't been updated already
+			// This is probably unnecessary, but better safe than sorry
 			if ((*Result)->GetLightingGuid() == Texture->GetLightingGuid())
 			{
 				(*Result)->SetLightingGuid();
 				(*Result)->Modify();
 				UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetPathName());
 			}
-		
+
 			Texture->SetLightingGuid();
 			Texture->Modify();
 			bMadeChanges = true;
@@ -147,6 +162,29 @@ void FGuidFixerModule::FixTextureGuids()
 		                                           : "No duplicate texture GUIDs found.");
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
+
+void FGuidFixerModule::FixEmptyTextureGuids() const
+{
+	bool bMadeChanges = false;
+	for (TObjectIterator<UTexture> Texture; Texture; ++Texture)
+	{
+		if (Texture->GetLightingGuid().IsValid())
+		{
+			continue;
+		}
+		
+		Texture->SetLightingGuid();
+		Texture->Modify();
+		bMadeChanges = true;
+		UE_LOG(LogTemp, Display, TEXT("%s: Texture has had its GUID updated."), *Texture->GetPathName());
+	}
+
+	const FText DialogText = FText::FromString(bMadeChanges
+		                                           ? "At least one texture GUID has been changed. Use save all to save these changes."
+		                                           : "No empty texture GUIDs found.");
+	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
+}
+
 #undef LOCTEXT_NAMESPACE
 
 IMPLEMENT_MODULE(FGuidFixerModule, GuidFixer)
